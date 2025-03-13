@@ -251,7 +251,7 @@ def solve_fermion(
         mpirun_options=mpirun_options,
         temp_dir=temp_dir,
         clean_temp_dir=clean_temp_dir,
-        mpi_runner,
+        mpi_runner=mpi_runner,
     )
     return e_dice, sci_state, avg_occupancies
 
