@@ -15,7 +15,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="qiskit-addon-dice-solver",
-    version="0.2.0",
+    version="0.3.0",
     author="IBM Quantum Middleware",
     description="A Python wrapper for the Dice eigensolver.",
     packages=find_packages(),
@@ -33,10 +33,10 @@ setup(
             "reno",
         ],
         "style": [
-            "ruff==0.8.4",
+            "ruff==0.9.9",
         ],
         "lint": [
-            "mypy==1.14.1",
+            "mypy==1.15.0",
             "pylint>=3.2.7",
             "pydocstyle==6.3",
             "reno",
