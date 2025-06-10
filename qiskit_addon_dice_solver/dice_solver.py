@@ -27,6 +27,28 @@ import numpy as np
 from pyscf import tools
 from qiskit_addon_sqd.fermion import SCIState, bitstring_matrix_to_ci_strs
 
+from contextlib import contextmanager
+from datetime import datetime
+from typing import Union
+import random
+import time
+
+
+@contextmanager
+def timer(name: str, identifier: Union[str, int] = None):
+    id_part = f"[{identifier}]" if identifier is not None else ""
+    ts_start = datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
+    print(f"[{ts_start}]{id_part} Starting {name}…", flush=True)
+
+    start = time.perf_counter()
+    try:
+        yield
+    finally:
+        elapsed = time.perf_counter() - start
+        ts_end = datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
+        print(f"[{ts_end}]{id_part} {name} completed in {elapsed:.3f} seconds", flush=True)
+
+
 # Ensure the runtime linker can find the local boost binaries at runtime
 DICE_BIN = os.path.join(os.path.abspath(os.path.dirname(__file__)), "bin")
 os.environ["LD_LIBRARY_PATH"] = f"{DICE_BIN}:{os.environ.get('LD_LIBRARY_PATH', '')}"
@@ -148,11 +170,16 @@ def solve_hci(
         max_iter=max_iter,
     )
 
+    # generate a random 8-digit ID
+    random_id = random.randint(10**7, 10**8 - 1)
+
     # Navigate to dice dir and call Dice
-    _call_dice(dice_dir, mpirun_options, mpi_runner)
+    with timer("_call_dice", identifier=random_id):
+        _call_dice(dice_dir, mpirun_options, mpi_runner)
 
     # Read and convert outputs
-    e_dice, sci_state, avg_occupancies = _read_dice_outputs(dice_dir, norb)
+    with timer("_read_dice_outputs", identifier=random_id):
+        e_dice, sci_state, avg_occupancies = _read_dice_outputs(dice_dir, norb)
 
     # Clean up the temp directory of intermediate files, if desired
     if clean_temp_dir:
@@ -303,7 +330,11 @@ def _read_dice_outputs(
     return energy_dice, sci_state, avg_occupancies
 
 
-def _call_dice(dice_dir: Path, mpirun_options: Sequence[str] | str | None, mpi_runner: str = "mpirun") -> None:
+def _call_dice(
+    dice_dir: Path,
+    mpirun_options: Sequence[str] | str | None,
+    mpi_runner: str = "mpirun",
+) -> None:
     """Navigate to the dice dir, invoke Dice, and navigate back."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     dice_path = os.path.join(script_dir, "bin", "Dice")
